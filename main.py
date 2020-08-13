@@ -67,7 +67,7 @@ feature_dim = max(train.n_fea, valid.n_fea, test.n_fea)
 feature_len = train.feature.shape[-1] - args.maxlen - 2
 print(user_dim, item_dim, feature_dim, len(train) + len(valid) + len(test) * 2)
 
-field_dims = args.baseline, [0] * (args.maxlen-1) + [item_dim] * 2 + [user_dim] + [0] * (feature_len - 1) + [feature_dim]
+field_dims = [0] * (args.maxlen-1) + [item_dim] * 2 + [user_dim] + [0] * (feature_len - 1) + [feature_dim]
 
 if args.rt:
     args.reload = True
