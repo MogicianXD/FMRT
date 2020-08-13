@@ -72,12 +72,12 @@ field_dims = args.baseline, [0] * (args.maxlen-1) + [item_dim] * 2 + [user_dim] 
 if args.rt:
     args.reload = True
     small_better = [False, False]
-    model = FMRT(field_dims,
+    model = FMRT(FactorizationMachineModel(field_dims, 64),
                  seq_dim=item_dim, q=args.q, seq_len=args.maxlen, save_path=args.savepath, use_cuda=True)
     fn = (model.fit_nll_neg_rt, model.test_classify_acc)
 else:
     small_better = [False]
-    model = FMModel(field_dims)
+    model = FMModel(FactorizationMachineModel(field_dims, 64))
     fn = (model.fit_nll_neg, model.test_classify_acc)
 
 test_bs = min(args.batch_size, 64)
