@@ -9,7 +9,7 @@ Yang Liu, Xianzhuo Xia, Liang Chen, Xiangnan He, Carl Yang, Zibin Zheng. Certifi
 
 The paper used a FM as: 
 
-$f_{\theta}(x)=w_{0}+\sum_{i=1}^{d} w_{i} x_{i}+\sum_{i=1}^{d} \sum_{j=i}^{d}<v_{i}, v_{j}>x_{i} x_{j}$
+![](https://img-blog.csdnimg.cn/20200813213411248.png#pic_center)
 
 `FMRT2.py` is the corresponding implementation.
 
@@ -17,7 +17,7 @@ However, I cannot see similar metrics. Before FMRT, the avg-max $q$ is only `0.8
 
 So I followed the formula Rendle adopted, which is
 
-$f_{\theta}(x)=w_{0}+\sum_{i=1}^{d} w_{i} x_{i}+\sum_{i=1}^{d} \sum_{j=i}^{d}<v_{i}, v_{j}>x_{i} x_{j}$
+![](https://img-blog.csdnimg.cn/20200813213353416.png#pic_center)
 
 Then I use `FMRT.py` by default. It dismissed elements on the diagonal.
 
