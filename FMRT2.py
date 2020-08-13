@@ -23,9 +23,8 @@ class FMRT(FMModel):
         self.candidate_idx = torch.tensor(candidate_idx, device=self.device, dtype=torch.int64)
 
     def fit_nll_neg_rt(self, input_batch, epsilon=1e-9):
-        preds = self.forward(input_batch)
-        b = self._bound(input_batch[:, :, :self.seq_len], preds)
-        preds = torch.sigmoid(preds + b)
+        b = self._bound(input_batch[:, :, :self.seq_len])
+        preds = torch.sigmoid(self.forward(input_batch) + b)
         cost = - torch.log(preds[:, 0] + epsilon).sum() - torch.log(1 - preds[:, 1:] + epsilon).sum()
         return cost / preds.shape[0]
 
@@ -58,29 +57,22 @@ class FMRT(FMModel):
         p_dsc_idx += 1
         return p_asc, p_asc_idx, p_dsc, p_dsc_idx
 
-    def _bound(self, input_batch, preds):
+    def _bound(self, input_batch):
         input_batch = input_batch.to(self.device)
         p, diag_asc_idx, diag_asc, diag_dsc_idx, diag_dsc, \
             second_asc_idx, second_asc, second_dsc_idx, second_dsc, second_order = self._bound_info(self.q+self.seq_len)
         p_asc, p_asc_idx, p_dsc, p_dsc_idx = self._bound_p(input_batch, p, second_order, maxq=self.q+self.seq_len)
         b = torch.zeros((input_batch.shape[0], input_batch.shape[1]), requires_grad=False, device=self.device)
         for bid in range(input_batch.shape[0]):
-            if preds[bid, 0] > 0:
-                history = input_batch[bid, 0: 1]
-                bi = (self._bound_one(p_asc_idx[bid], p_asc[bid], history) +
-                      self._bound_one(diag_asc_idx, diag_asc, history) +
-                      self._bound_two(second_asc_idx, second_asc, history)).item()
-                if bi < 0:
-                    b[bid, 0] += bi
+            history = input_batch[bid, 0: 1]
+            b[bid, 0] += (self._bound_one(p_asc_idx[bid], p_asc[bid], history) +
+                          self._bound_one(diag_asc_idx, diag_asc, history) +
+                          self._bound_two(second_asc_idx, second_asc, history)).item()
             for i in range(1, input_batch.shape[1]):
-                if preds[bid, i] >= 0:
-                    continue
                 history = input_batch[bid, i: (i+1)]
-                bi = (self._bound_one(p_dsc_idx[bid, i-1], p_dsc[bid, i-1], history) +
-                      self._bound_one(diag_dsc_idx, diag_dsc, history) +
-                      self._bound_two(second_dsc_idx, second_dsc, history)).item()
-                if bi > 0:
-                    b[bid, i] += bi
+                b[bid, i] += (self._bound_one(p_dsc_idx[bid, i-1], p_dsc[bid, i-1], history) +
+                              self._bound_one(diag_dsc_idx, diag_dsc, history) +
+                              self._bound_two(second_dsc_idx, second_dsc, history)).item()
         return b
 
     def _bound_one(self, idx, candidate, history):

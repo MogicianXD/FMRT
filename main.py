@@ -25,7 +25,7 @@ def parse_args():
                         help='Batch size.')
     parser.add_argument('--maxlen', type=int, default=20,
                         help='Max length of seqs')
-    parser.add_argument('--lr', type=float, default=0.001,
+    parser.add_argument('--lr', type=float, default=0.01,
                         help='Learning rate.')
     parser.add_argument('--reload', action='store_true',
                         help='restore saved params if true')
@@ -39,7 +39,7 @@ def parse_args():
                         help='gpu No.')
     parser.add_argument('--rt', action='store_true',
                         help='use FM-RT')
-    parser.add_argument('--q', type=int, default=2,
+    parser.add_argument('--q', type=int, default=3,
                         help='Max num of perturbations')
     return parser.parse_args()
 
@@ -55,6 +55,7 @@ print(args)
 
 os.environ["CUDA_VISIBLE_DEVICES"] = args.cuda
 
+ref = -1
 
 train = FeatureDataset(dataset_path + args.data + '/train.txt', maxlen=args.maxlen)
 valid = FeatureDataset(dataset_path + args.data + '/valid.txt', maxlen=args.maxlen)
@@ -66,29 +67,25 @@ feature_dim = max(train.n_fea, valid.n_fea, test.n_fea)
 feature_len = train.feature.shape[-1] - args.maxlen - 2
 print(user_dim, item_dim, feature_dim, len(train) + len(valid) + len(test) * 2)
 
-field_dims = [0] * (args.maxlen-1) + [item_dim] * 2 + [user_dim] + [0] * (feature_len - 1) + [feature_dim]
-if args.rt:
-    task = 'rt'
-    small_better = [False, False]
-    args.reload = True
-    model = FMRT(FactorizationMachineModel(field_dims, 64),
-                 seq_dim=item_dim, q=args.q, seq_len=args.maxlen, save_path=args.savepath, use_cuda=True)
-else:
-    task = 'classification'
-    small_better = [False]
-    model = FMModel(FactorizationMachineModel(field_dims, 64))
+field_dims = args.baseline, [0] * (args.maxlen-1) + [item_dim] * 2 + [user_dim] + [0] * (feature_len - 1) + [feature_dim]
 
-ref = -1
+if args.rt:
+    args.reload = True
+    small_better = [False, False]
+    model = FMRT(field_dims,
+                 seq_dim=item_dim, q=args.q, seq_len=args.maxlen, save_path=args.savepath, use_cuda=True)
+    fn = (model.fit_nll_neg_rt, model.test_classify_acc)
+else:
+    small_better = [False]
+    model = FMModel(field_dims)
+    fn = (model.fit_nll_neg, model.test_classify_acc)
 
 test_bs = min(args.batch_size, 64)
 train = DataLoader(train, batch_size=args.batch_size, shuffle=True)
 valid = DataLoader(valid, batch_size=test_bs)
 test = DataLoader(test, batch_size=test_bs)
 
-fn = {'classification': (model.fit_nll_neg, model.test_classify),
-      'rt': (model.fit_nll_neg_rt, model.test_classify_acc)}
-
-model.train_test(fn[task][0], fn[task][1], train, valid, test, only_eval=args.eval,
+model.train_test(fn[0], fn[1], train, valid, test, only_eval=args.eval,
                  savepath=args.savepath if args.baseline == 'fm' else None, reload=args.reload,
-                 data=args.data, n_epochs=args.epochs, lr=args.lr, topk=task=='rank',
+                 data=args.data, n_epochs=args.epochs, lr=args.lr, topk=False,
                  small_better=small_better, ref=ref)
