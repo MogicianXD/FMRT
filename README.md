@@ -1,6 +1,6 @@
 # FM-RT
 
-A unofficial pytorch implementation of [FM-RT](http://arxiv.org/abs/1911.02752):
+An unofficial pytorch implementation of [FM-RT](http://arxiv.org/abs/1911.02752):
 
 Yang Liu, Xianzhuo Xia, Liang Chen, Xiangnan He, Carl Yang, Zibin Zheng. Certifiable Robustness to Discrete Adversarial Perturbations for Factorization Machines, in SIGIR 2020
 
