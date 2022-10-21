@@ -44,7 +44,7 @@ def parse_args():
     return parser.parse_args()
 
 
-dataset_path = '../benchmarks/datasets/'
+dataset_path = './dataset/'
 args = parse_args()
 if not args.savepath:
     args.savepath = 'checkpoints/' + args.baseline + '_' + args.data

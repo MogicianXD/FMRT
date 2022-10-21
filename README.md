@@ -13,7 +13,7 @@ The paper used a FM as:
 
 `FMRT2.py` is the corresponding implementation.
 
-However, I cannot see similar metrics. Before FMRT, the avg-max $q$ is only `0.88`, while the paper showed `1.60`.  
+However, I cannot see similar metrics. Before FMRT, the avg-max $q$ is only `1.12`, while the paper showed `1.60`.  
 
 So I followed the formula Rendle adopted, which is
 

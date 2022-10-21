@@ -21,7 +21,7 @@ class FeaturesLinear(torch.nn.Module):
 
 class FeaturesEmbedding(torch.nn.Module):
 
-    def __init__(self, field_dims, embed_dim):
+    def ``````__init__(self, field_dims, embed_dim):
         super().__init__()
         self.embedding = torch.nn.Embedding(sum(field_dims), embed_dim, padding_idx=0)
         self.offsets = np.array((0, *np.cumsum(field_dims)[:-1]), dtype=np.long)
